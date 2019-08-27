@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.9.1"
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
-http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="Validate-using-validator-sample">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" allowedMethods="POST" doc:name="HTTP"/>
+        <validation:is-not-empty message="${MSG001}" exceptionClass="java.sql.SQLException" value="#[dw('payload.name default null')]" doc:name="To validate one field"/>
+        <validation:all doc:name="To validate multiple fields at once">
+            <validation:validations>
+                <validation:is-not-empty value="#[dw('payload.address default null')]" message="${MSG003}" exceptionClass="java.sql.SQLException"/>
+                <validation:is-not-null value="#[dw('payload.id default null')]" message="${MSG002}" exceptionClass="java.sql.SQLException"/>
+            </validation:validations>
+        </validation:all>
+        <logger message="payload-------- #[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="json-payload-validation-using-json-schema">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/schema" doc:name="HTTP"/>
+        <json:validate-schema schemaLocation="json-schema.json" doc:name="Validate JSON Schema"/>
+        <logger message="payload-------- #[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
